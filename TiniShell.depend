@@ -1,0 +1,65 @@
+# depslib dependency file v1.0
+1748869754 source:e:\new folder (28)\tinishell\builtins.cpp
+	"builtins.h"
+	<iostream>
+	<vector>
+	<sstream>
+	<map>
+	<experimental/filesystem>
+
+1748861661 e:\new folder (28)\tinishell\builtins.h
+	<vector>
+	<string>
+
+1748832099 source:e:\new folder (28)\tinishell\command_parser.cpp
+	"command_parser.h"
+	<sstream>
+	<string>
+
+1748832102 e:\new folder (28)\tinishell\command_parser.h
+	<string>
+	<vector>
+
+1748853090 source:e:\new folder (28)\tinishell\logger.cpp
+	"logger.h"
+	<iostream>
+	<windows.h>
+
+1748853186 e:\new folder (28)\tinishell\logger.h
+	<string>
+
+1748870282 source:e:\new folder (28)\tinishell\main.cpp
+	<iostream>
+	<string>
+	<vector>
+	"command_parser.h"
+	"process_executor.h"
+	"process_manager.h"
+	"logger.h"
+	"builtins.h"
+
+1748834326 e:\new folder (28)\tinishell\process_executor.h
+	"command_parser.h"
+	"process_manager.h"
+
+1748834349 e:\new folder (28)\tinishell\process_manager.h
+	<vector>
+	<windows.h>
+	<string>
+	"command_parser.h"
+
+1748853186 source:e:\new folder (28)\tinishell\process_executor.cpp
+	"process_executor.h"
+	"process_manager.h"
+	"logger.h"
+	<windows.h>
+	<string>
+
+1748853335 source:e:\new folder (28)\tinishell\process_manager.cpp
+	"process_manager.h"
+	"logger.h"
+	<windows.h>
+	<tlhelp32.h>
+	<string>
+	<vector>
+
