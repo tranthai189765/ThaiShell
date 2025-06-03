@@ -11,4 +11,4 @@ enum LogLevel {
 
 
 void log(LogLevel level, const std::string& message);
-void printBanner();
+void printInitialBanner();

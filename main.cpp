@@ -1,4 +1,9 @@
 // main.cpp for ThaiShell
+// Prevent Windows headers from defining conflicting 'byte' type
+#define NOMINMAX
+#define WIN32_LEAN_AND_MEAN
+#define WINDOWS_LEAN_AND_MEAN
+
 #include <iostream>
 #include <string>
 #include <vector>
@@ -9,7 +14,7 @@
 #include "builtins.h"
 using namespace std;
 int main() {
-    printBanner();
+    printInitialBanner();
     ProcessManager procManager;
     string input;
 

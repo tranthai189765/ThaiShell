@@ -1,8 +1,8 @@
 #include "process_executor.h"
 #include "process_manager.h"
 #include "logger.h"
-#include <windows.h>
 #include <string>
+#include <windows.h>
 
 using namespace std;
 
@@ -10,15 +10,13 @@ void ProcessExecutor::execute(const Command& cmd, ProcessManager& procManager) {
     string fullCmd = cmd.program;
     for (const auto& arg : cmd.args) {
         fullCmd += " " + arg;
-    }
-
-    STARTUPINFO si = { sizeof(si) };
+    }    STARTUPINFOA si = { sizeof(si) };
     PROCESS_INFORMATION pi;
 
     char* cmdLine = new char[fullCmd.length() + 1];
     strcpy(cmdLine, fullCmd.c_str());
 
-    BOOL success = CreateProcess(
+    BOOL success = CreateProcessA(
         NULL,
         cmdLine,
         NULL,

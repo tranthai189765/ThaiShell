@@ -3,6 +3,7 @@
 #include <vector>
 #include <sstream>
 #include <map>
+#include <iomanip>
 
 using namespace std;
 #include <experimental/filesystem>
@@ -12,14 +13,31 @@ namespace fs = std::experimental::filesystem;
 static map<string, string> aliases;
 
 void builtin_help() {
-    cout << "\nAvailable ThaiShell built-in commands:\n"
-         << "  help             - Show this help message\n"
-         << "  cd <dir>         - Change current working directory\n"
-         << "  exit             - Exit ThaiShell\n"
-         << "  jobs             - List background processes\n"
-         << "  alias name=cmd   - Define a command alias\n"
-         << "  unalias name     - Remove an alias\n"
-         << endl;
+    std::cout << std::left;
+    std::cout << std::setw(20) << "Command" << ": Description" << std::endl;
+    std::cout << std::setw(20) << "--------------------" << "--------------------" << std::endl;
+    std::cout << std::setw(20) << "Shell Command:" << std::endl;
+    std::cout << std::setw(20) << "help" << ": Show this command list" << std::endl;
+    std::cout << std::setw(20) << "exit" << ": Exit ThaiShell" << std::endl;    std::cout << std::setw(20) << "--------------------" << "--------------------" << std::endl;
+    std::cout << std::setw(20) << "Directory Command:" << std::endl;
+    std::cout << std::setw(20) << "cd <dir>" << ": Change current working directory" << std::endl;
+    std::cout << std::setw(20) << "--------------------" << "--------------------" << std::endl;
+    std::cout << std::setw(20) << "Process Command:" << std::endl;
+    std::cout << std::setw(20) << "start <processName>" << "Start foreground process" << std::endl;
+    std::cout << std::setw(20) << "start <processName> &" << "Start background process" << std::endl;
+    std::cout << std::setw(20) << "myList" << ": List background processes create by ThaiShell" << std::endl;
+    std::cout << std::setw(20) << "globalList" << ": List background process" << std::endl;
+    std::cout << std::setw(20) << "kill <pid>" << ": Kill a process by PID" << std::endl;
+    std::cout << std::setw(20) << "stop <pid>" << ": Stop a process by PID" << std::endl;
+    std::cout << std::setw(20) << "resume <pid>" << ": Resume a stopped process by PID" << std::endl;
+
+    std::cout << std::setw(20) << "--------------------" << "--------------------" << std::endl;
+    std::cout << std::setw(20) << "Miscellaneous Command:" << std::endl;
+    std::cout << std::setw(20) << "alias name=cmd" << ": Define a command alias" << std::endl;
+    std::cout << std::setw(20) << "unalias name" << ": Remove an alias" << std::endl;
+    std::cout << std::setw(20) << "--------------------" << "--------------------" << std::endl;
+    std::cout << std::setw(20) << "Other Command:" << std::endl;
+
 }
 
 void builtin_cd(const vector<string>& args) {

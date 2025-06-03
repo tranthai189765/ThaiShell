@@ -35,11 +35,15 @@ void log(LogLevel level, const std::string& message) {
     std::cout << message << std::endl;
 }
 
-void printBanner() {
+void printInitialBanner() {
+    DWORD pid = GetCurrentProcessId();
     SetColor(FOREGROUND_GREEN | FOREGROUND_INTENSITY);
     std::cout << "=====================================\n";
     std::cout << "        Welcome to ThaiShell         \n";
     std::cout << "   Your professional command shell   \n";
-    std::cout << "=====================================\n\n";
-    SetColor(FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE); // Trắng mặc định
+    std::cout << "=====================================\n";
+    SetColor(FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE);
+    std::cout << "Welcome to Tiny Shell!\n";
+    std::cout << "Process ID of Tiny Shell: " << pid << "\n";
+    std::cout << "Type 'help' to see available commands.\n";
 }
