@@ -24,7 +24,7 @@ void builtin_help() {
     std::cout << std::setw(20) << "--------------------" << "--------------------" << std::endl;
     std::cout << std::setw(20) << "Process Command:" << std::endl;
     std::cout << std::setw(20) << "start <processName>" << "Start foreground process" << std::endl;
-    std::cout << std::setw(20) << "start <processName> &" << "Start background process" << std::endl;
+    std::cout << std::setw(20) << "start <processName> & : " << "Start background process" << std::endl;
     std::cout << std::setw(20) << "myList" << ": List background processes create by ThaiShell" << std::endl;
     std::cout << std::setw(20) << "globalList" << ": List background process" << std::endl;
     std::cout << std::setw(20) << "kill <pid>" << ": Kill a process by PID" << std::endl;
@@ -37,7 +37,6 @@ void builtin_help() {
     std::cout << std::setw(20) << "unalias name" << ": Remove an alias" << std::endl;
     std::cout << std::setw(20) << "--------------------" << "--------------------" << std::endl;
     std::cout << std::setw(20) << "Other Command:" << std::endl;
-
 }
 
 void builtin_cd(const vector<string>& args) {

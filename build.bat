@@ -5,7 +5,7 @@ setlocal
 cd /d "%~dp0"
 
 echo Building ThaiShell...
-g++ main.cpp builtins.cpp command_parser.cpp process_executor.cpp process_manager.cpp logger.cpp -o ThaiShell.exe -std=c++17 -lstdc++fs
+g++ main.cpp builtins.cpp command_parser.cpp process_executor.cpp process_manager.cpp logger.cpp history.cpp -o ThaiShell.exe -std=c++17 -lstdc++fs
 
 if %ERRORLEVEL% == 0 (
     echo Build successful!

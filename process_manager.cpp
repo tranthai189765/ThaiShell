@@ -76,6 +76,10 @@ void startProcess(const string& cmd, bool isBackground) {
         if (isBackground) {
             // First, add the initial process
             ProcessManager::addProcess(pi.dwProcessId, cmd, pi.hProcess);
+            
+            // Add the process to history
+            ProcessHistory::addProcess(pi.dwProcessId, cmd);
+            
             log(INFO, "Started background process with PID: " + to_string(pi.dwProcessId) +
                       ", Command: " + cmd);
             
@@ -105,6 +109,10 @@ void startProcess(const string& cmd, bool isBackground) {
                                     
                                     // Add the child to our process list
                                     ProcessManager::addProcess(pe32.th32ProcessID, childName, childHandle);
+                                    
+                                    // Add the child process to history
+                                    ProcessHistory::addProcess(pe32.th32ProcessID, childName);
+                                    
                                     log(INFO, "Tracked child process with PID: " + to_string(pe32.th32ProcessID) +
                                         ", Command: " + childName + " (child of PID: " + to_string(pi.dwProcessId) + ")");
                                 } else {
@@ -115,10 +123,16 @@ void startProcess(const string& cmd, bool isBackground) {
                     } while (Process32Next(hSnapshot, &pe32));
                 }
                 CloseHandle(hSnapshot);
-            }
-            
+            }   
         } else {
+            // For foreground processes, add to history before waiting
+            ProcessHistory::addProcess(pi.dwProcessId, cmd);
+            
             WaitForSingleObject(pi.hProcess, INFINITE);
+            
+            // Update end time since the process has finished
+            ProcessHistory::updateEndTime(pi.dwProcessId);
+            
             CloseHandle(pi.hProcess);
             CloseHandle(pi.hThread);
         }
@@ -143,7 +157,57 @@ void ProcessManager::listProcesses() {
     DWORD currentPID = GetCurrentProcessId();
       
     for (const auto& proc : bgProcesses) {
-        // Get the parent process ID (PPID) for this process
+        // First check if this process still exists or has been replaced by a child
+        DWORD actualPid = proc.pid;
+        string actualCommand = proc.command;
+        bool foundActualProcess = false;
+        
+        // Take a snapshot to find the actual running process
+        HANDLE hProcessSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+        if (hProcessSnap != INVALID_HANDLE_VALUE) {
+            PROCESSENTRY32 pe32;
+            pe32.dwSize = sizeof(PROCESSENTRY32);
+            if (Process32First(hProcessSnap, &pe32)) {
+                do {
+                    // Check if this is our process or a child of our process
+                    if (pe32.th32ProcessID == proc.pid) {
+                        foundActualProcess = true;                        // For simplicity, just assign the filename directly
+                        // This handles both UNICODE and non-UNICODE builds
+                        actualCommand = pe32.szExeFile;
+                        break;
+                    }
+                    
+                    // Try to identify child processes related to our command
+                    if (pe32.th32ParentProcessID == proc.pid) {
+                        // This is potentially the real process we want to show
+                        // For example, when starting "calc.exe", Windows might create a launcher
+                        // process first, which then starts the actual calculator process
+                        char exeName[MAX_PATH];
+                        HANDLE childProc = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, pe32.th32ProcessID);
+                        if (childProc) {
+                            DWORD size = MAX_PATH;
+                            if (QueryFullProcessImageNameA(childProc, 0, exeName, &size)) {
+                                string fullPath = exeName;
+                                size_t lastSlash = fullPath.find_last_of("\\");
+                                string childName = fullPath.substr(lastSlash + 1);
+                                
+                                // If the executable name matches what we're looking for
+                                if (childName.find(proc.command) != string::npos || 
+                                    proc.command.find(childName) != string::npos) {
+                                    actualPid = pe32.th32ProcessID;
+                                    actualCommand = childName;
+                                    foundActualProcess = true;
+                                    CloseHandle(childProc);
+                                    break;
+                                }
+                            }
+                            CloseHandle(childProc);
+                        }
+                    }
+                } while (Process32Next(hProcessSnap, &pe32));
+            }
+            CloseHandle(hProcessSnap);
+        }        // Get the parent process ID (PPID) for this process
         DWORD ppid = currentPID; // Default to ThaiShell's PID
         // Try to get actual PPID from process snapshot
         HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
@@ -152,7 +216,7 @@ void ProcessManager::listProcesses() {
             pe32.dwSize = sizeof(PROCESSENTRY32);
             if (Process32First(hSnapshot, &pe32)) {
                 do {
-                    if (pe32.th32ProcessID == proc.pid) {
+                    if (pe32.th32ProcessID == actualPid) {
                         ppid = pe32.th32ParentProcessID;
                         break;
                     }
@@ -163,9 +227,16 @@ void ProcessManager::listProcesses() {
         
         // Check real process status
         string status = "Unknown";
-        if (proc.handle) {
+        
+        // If we're using a different PID than originally stored, get a handle to it
+        HANDLE processHandle = proc.handle;
+        if (actualPid != proc.pid) {
+            processHandle = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, actualPid);
+        }
+        
+        if (processHandle) {
             DWORD exitCode;
-            if (GetExitCodeProcess(proc.handle, &exitCode)) {
+            if (GetExitCodeProcess(processHandle, &exitCode)) {
                 if (exitCode == STILL_ACTIVE) {
                     // Check if the process is actually running by checking its threads
                     bool isRunning = false;
@@ -175,7 +246,7 @@ void ProcessManager::listProcesses() {
                         te32.dwSize = sizeof(THREADENTRY32);
                         if (Thread32First(hThreadSnap, &te32)) {
                             do {
-                                if (te32.th32OwnerProcessID == proc.pid) {
+                                if (te32.th32OwnerProcessID == actualPid) {
                                     isRunning = true;  // If we find threads for this process, it exists
                                     break;
                                 }
@@ -192,8 +263,7 @@ void ProcessManager::listProcesses() {
                             THREADENTRY32 te32;
                             te32.dwSize = sizeof(THREADENTRY32);
                             if (Thread32First(hThreadSnap2, &te32)) {
-                                do {
-                                    if (te32.th32OwnerProcessID == proc.pid) {
+                                do {                                if (te32.th32OwnerProcessID == actualPid) {
                                         HANDLE hThread = OpenThread(THREAD_SUSPEND_RESUME, FALSE, te32.th32ThreadID);
                                         if (hThread) {
                                             // Try to suspend the thread to check its current state
@@ -232,13 +302,16 @@ void ProcessManager::listProcesses() {
             }
         } else {
             status = proc.isRunning ? "Running" : "Stopped";
-        }
-          // Output to console with formatting
-        cout << setw(10) << left << proc.pid
-             << setw(40) << left << proc.command
+        }          // Output to console with formatting
+        cout << setw(10) << left << actualPid  // Use the actual PID we found
+             << setw(40) << left << actualCommand  // Use the actual command/process name
              << setw(20) << left << ppid
              << setw(20) << left << status << endl;
              
+        // If we're showing a different PID than what's in our records, let the user know
+        if (actualPid != proc.pid && foundActualProcess) {
+            cout << "   └─ (Actual process running for " << proc.command << ")" << endl;
+        }
     }
 }
 
@@ -351,6 +424,10 @@ void ProcessManager::killProcess(DWORD pid) {
             if (TerminateProcess(it->handle, 0)) {
                 WaitForSingleObject(it->handle, INFINITE);
                 CloseHandle(it->handle);
+                
+                // Update the end time in process history
+                ProcessHistory::updateEndTime(pid);
+                
                 log(SUCCESS, "Killed process with PID: " + to_string(pid));
                 bgProcesses.erase(it);
             } else {
@@ -382,9 +459,12 @@ void ProcessManager::killProcess(DWORD pid) {
     // Try with more privileges (PROCESS_ALL_ACCESS) to handle protected processes
     HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
     if (hProcess != NULL) {
-        if (TerminateProcess(hProcess, 0)) {
-            WaitForSingleObject(hProcess, INFINITE);
+        if (TerminateProcess(hProcess, 0)) {            WaitForSingleObject(hProcess, INFINITE);
             CloseHandle(hProcess);
+            
+            // Update the end time in process history for external processes too
+            ProcessHistory::updateEndTime(pid);
+            
             log(SUCCESS, "Killed external process with PID: " + to_string(pid));
         } else {
             // If failed, check if it's a Windows system process
@@ -532,9 +612,12 @@ bool ProcessManager::handleCommand(const Command& cmd) {
     if (cmd.program == "stop" && !cmd.args.empty()) {
         stopProcess(stoi(cmd.args[0]));
         return true;
-    }
-    if (cmd.program == "resume" && !cmd.args.empty()) {
+    }    if (cmd.program == "resume" && !cmd.args.empty()) {
         resumeProcess(stoi(cmd.args[0]));
+        return true;
+    }
+    if (cmd.program == "history") {
+        ProcessHistory::displayHistory();
         return true;
     }
     return false;
