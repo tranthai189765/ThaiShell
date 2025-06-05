@@ -1,0 +1,79 @@
+# depslib dependency file v1.0
+1749069542 source:e:\new folder (29)\abc\builtins.cpp
+	<iostream>
+	<vector>
+	<sstream>
+	<map>
+	<iomanip>
+	<experimental/filesystem>
+
+1749065075 source:e:\new folder (29)\abc\command_parser.cpp
+	"command_parser.h"
+	<sstream>
+	<string>
+
+1749065075 e:\new folder (29)\abc\command_parser.h
+	<string>
+	<vector>
+
+1749065077 source:e:\new folder (29)\abc\history.cpp
+	"history.h"
+	"logger.h"
+	<iostream>
+	<iomanip>
+	<sstream>
+
+1749065077 e:\new folder (29)\abc\history.h
+	<string>
+	<vector>
+	<chrono>
+	<ctime>
+	<windows.h>
+
+1749065077 e:\new folder (29)\abc\logger.h
+	<string>
+
+1749065077 source:e:\new folder (29)\abc\logger.cpp
+	"logger.h"
+	<iostream>
+	<windows.h>
+
+1749069542 source:e:\new folder (29)\abc\path.cpp
+	"path.h"
+	<iostream>
+	<iomanip>
+	<algorithm>
+
+1749069542 e:\new folder (29)\abc\path.h
+	<string>
+	<vector>
+	<experimental/filesystem>
+	"command_parser.h"
+
+1749065077 source:e:\new folder (29)\abc\process_executor.cpp
+	"process_executor.h"
+	"process_manager.h"
+	"logger.h"
+	<string>
+	<windows.h>
+
+1749065077 e:\new folder (29)\abc\process_executor.h
+	"command_parser.h"
+	"process_manager.h"
+
+1749065077 e:\new folder (29)\abc\process_manager.h
+	<vector>
+	<windows.h>
+	<string>
+	"command_parser.h"
+	"history.h"
+
+1749065077 source:e:\new folder (29)\abc\process_manager.cpp
+	"process_manager.h"
+	"logger.h"
+	<tlhelp32.h>
+	<string>
+	<vector>
+	<iostream>
+	<iomanip>
+
