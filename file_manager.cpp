@@ -4,10 +4,10 @@
 #include <sstream>
 
 #include "color.h"
-Command FileManager::parseCommand(const string& input) {
+Command FileManager::parseCommand(const std::string& input) {
     Command cmd;
     cmd.isBackground = false;
-    string trimmed = input;
+    std::string trimmed = input;
     while (!trimmed.empty() && trimmed.back() == ' ') {
         trimmed.pop_back();
     }

@@ -4,7 +4,7 @@
 #include <algorithm>
 
 // Initialize ThaiShell-specific PATH
-vector<string> PathManager::thaiShellPath;
+std::vector<std::string> PathManager::thaiShellPath;
 
 void PathManager::executeCommand(const Command& cmd) {
     if (cmd.program == "pwd") {

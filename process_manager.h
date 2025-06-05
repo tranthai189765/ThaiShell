@@ -16,6 +16,7 @@
 #include <string>
 #include "command_parser.h"
 #include "history.h"
+#include "ctrl_c_handler.h"
 struct BackgroundProcess {
     DWORD pid;
     std::string command;
@@ -29,6 +30,7 @@ public:
     static void listProcesses();
     static void killProcess(DWORD pid);
     static void stopProcess(DWORD pid);
+    static void findChildProcesses(DWORD parentPid);
     static void resumeProcess(DWORD pid);
     bool handleCommand(const Command& cmd);
 };

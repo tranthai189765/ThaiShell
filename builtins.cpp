@@ -12,44 +12,48 @@ using namespace std;
 static map<string, string> aliases;
 
 void builtin_help() {
+    int x = 30;
     std::cout << std::left;
-    std::cout << std::setw(20) << "Command" << ": Description" << std::endl;
-    std::cout << std::setw(20) << "--------------------" << "--------------------" << std::endl;
-    std::cout << std::setw(20) << "Shell Command:" << std::endl;
-    std::cout << std::setw(20) << "help" << ": Show this command list" << std::endl;
-    std::cout << std::setw(20) << "exit" << ": Exit ThaiShell" << std::endl;
-    std::cout << std::setw(20) << "--------------------" << "--------------------" << std::endl;
-    std::cout << std::setw(20) << "File/Directory Command:" << std::endl;
-    std::cout << std::setw(20) << "cd <dir>" << ": Change current working directory" << std::endl;
-    std::cout << std::setw(20) << "ls [dir]" << ": List directory contents" << std::endl;
-    std::cout << std::setw(20) << "mkdir <dir>" << ": Create a new directory" << std::endl;
-    std::cout << std::setw(20) << "rm <path>" << ": Remove a file or directory" << std::endl;
-    std::cout << std::setw(20) << "mv <src> <dest>" << ": Move or rename a file/directory" << std::endl;
-    std::cout << std::setw(20) << "cp <src> <dest>" << ": Copy a file or directory" << std::endl;
-    std::cout << std::setw(20) << "touch <file>" << ": Create or update a file" << std::endl;
-    std::cout << std::setw(20) << "write <file> <text>" << ": Write text to a file (overwrites)" << std::endl;
-    std::cout << std::setw(20) << "read <file>" << ": Read and display file contents" << std::endl;
-    std::cout << std::setw(20) << "--------------------" << "--------------------" << std::endl;
-    std::cout << std::setw(20) << "Path Command:" << std::endl;
-    std::cout << std::setw(20) << "pwd" << ": Print current working directory" << std::endl;
-    std::cout << std::setw(20) << "path" << ": Display ThaiShell PATH" << std::endl;
-    std::cout << std::setw(20) << "path add <dir>" << ": Add directory to ThaiShell PATH" << std::endl;
-    std::cout << std::setw(20) << "path remove <dir>" << ": Remove directory from ThaiShell PATH" << std::endl;
-    std::cout << std::setw(20) << "--------------------" << "--------------------" << std::endl;
-    std::cout << std::setw(20) << "Process Command:" << std::endl;
-    std::cout << std::setw(20) << "start <processName>" << ": Start foreground process" << std::endl;
-    std::cout << std::setw(20) << "start <processName> &" << ": Start background process" << std::endl;
-    std::cout << std::setw(20) << "myList" << ": List background processes created by ThaiShell" << std::endl;
-    std::cout << std::setw(20) << "globalList" << ": List all background processes" << std::endl;
-    std::cout << std::setw(20) << "kill <pid>" << ": Kill a process by PID" << std::endl;
-    std::cout << std::setw(20) << "stop <pid>" << ": Stop a process by PID" << std::endl;
-    std::cout << std::setw(20) << "resume <pid>" << ": Resume a stopped process by PID" << std::endl;
-    std::cout << std::setw(20) << "--------------------" << "--------------------" << std::endl;
-    std::cout << std::setw(20) << "Miscellaneous Command:" << std::endl;
-    std::cout << std::setw(20) << "alias name=cmd" << ": Define a command alias" << std::endl;
-    std::cout << std::setw(20) << "unalias name" << ": Remove an alias" << std::endl;
-    std::cout << std::setw(20) << "--------------------" << "--------------------" << std::endl;
-    std::cout << std::setw(20) << "Other Command:" << std::endl;
+    std::cout << std::setw(x) << "Command" << "Description" << std::endl;
+    std::cout << std::setw(x) << "-------------------------------------------------------------------------" << std::endl;    
+    std::cout << std::setw(x) << "Shell Command:" << std::endl;    
+    std::cout << std::setw(x) << "help" << ": Show this command list" << std::endl;
+    std::cout << std::setw(x) << "exit" << ": Exit ThaiShell" << std::endl;
+    std::cout << std::setw(x) << "echo [-n] [-e] [text]" << ": Display a line of text" << std::endl;
+    std::cout << std::setw(x) << "echo -n" << ": Do not output the trailing newline" << std::endl;
+    std::cout << std::setw(x) << "echo -e" << ": Enable interpretation of backslash escapes" << std::endl;
+    std::cout << std::setw(x) << "-------------------------------------------------------------------------" << std::endl;
+    std::cout << std::setw(x) << "File/Directory Command:" << std::endl;
+    std::cout << std::setw(x) << "cd <dir>" << ": Change current working directory" << std::endl;
+    std::cout << std::setw(x) << "ls [dir]" << ": List directory contents" << std::endl;
+    std::cout << std::setw(x) << "mkdir <dir>" << ": Create a new directory" << std::endl;
+    std::cout << std::setw(x) << "rm <path>" << ": Remove a file or directory" << std::endl;
+    std::cout << std::setw(x) << "mv <src> <dest>" << ": Move or rename a file/directory" << std::endl;
+    std::cout << std::setw(x) << "cp <src> <dest>" << ": Copy a file or directory" << std::endl;
+    std::cout << std::setw(x) << "touch <file>" << ": Create or update a file" << std::endl;
+    std::cout << std::setw(x) << "write <file> <text>" << ": Write text to a file (overwrites)" << std::endl;
+    std::cout << std::setw(x) << "read <file>" << ": Read and display file contents" << std::endl;
+    std::cout << std::setw(x) << "-------------------------------------------------------------------------" << std::endl;
+    std::cout << std::setw(x) << "Path Command:" << std::endl;
+    std::cout << std::setw(x) << "pwd" << ": Print current working directory" << std::endl;
+    std::cout << std::setw(x) << "path" << ": Display ThaiShell PATH" << std::endl;
+    std::cout << std::setw(x) << "path add <dir>" << ": Add directory to ThaiShell PATH" << std::endl;
+    std::cout << std::setw(x) << "path remove <dir>" << ": Remove directory from ThaiShell PATH" << std::endl;
+    std::cout << std::setw(x) << "-------------------------------------------------------------------------" << std::endl;
+    std::cout << std::setw(x) << "Process Command:" << std::endl;
+    std::cout << std::setw(x) << "start <processName>" << ": Start foreground process" << std::endl;
+    std::cout << std::setw(x) << "start <processName> &" << ": Start background process" << std::endl;
+    std::cout << std::setw(x) << "myList" << ": List background processes created by ThaiShell" << std::endl;
+    std::cout << std::setw(x) << "globalList" << ": List all background processes" << std::endl;
+    std::cout << std::setw(x) << "kill <pid>" << ": Kill a process by PID" << std::endl;
+    std::cout << std::setw(x) << "stop <pid>" << ": Stop a process by PID" << std::endl;
+    std::cout << std::setw(x) << "resume <pid>" << ": Resume a stopped process by PID" << std::endl;
+    std::cout << std::setw(x) << "-------------------------------------------------------------------------" << std::endl;
+    std::cout << std::setw(x) << "Miscellaneous Command:" << std::endl;
+    std::cout << std::setw(x) << "alias name=cmd" << ": Define a command alias" << std::endl;
+    std::cout << std::setw(x) << "unalias name" << ": Remove an alias" << std::endl;
+    std::cout << std::setw(x) << "-------------------------------------------------------------------------" << std::endl;
+    std::cout << std::setw(x) << "Other Command:" << std::endl;
 }
 
 void builtin_cd(const vector<string>& args) {
@@ -108,6 +112,71 @@ string resolve_alias(const string& name) {
     return name;
 }
 
+// Echo command implementation
+void builtin_echo(const vector<string>& args) {
+    // Skip the command name (args[0])
+    bool add_newline = true;  // Default behavior is to add a newline
+    bool interpret_escapes = false;
+    size_t start_idx = 1;
+
+    // Check for options
+    while (start_idx < args.size() && args[start_idx].size() > 0 && args[start_idx][0] == '-') {
+        if (args[start_idx] == "-n") {
+            // Note: In standard Unix shells, -n suppresses the newline
+            // In ThaiShell, we ignore it and always add a newline for consistency
+            start_idx++;
+        } else if (args[start_idx] == "-e") {
+            interpret_escapes = true;
+            start_idx++;
+        } else if (args[start_idx] == "--") {
+            start_idx++;
+            break;
+        } else {
+            // If not a recognized option, assume it's part of the text
+            break;
+        }
+    }
+
+    // Process arguments
+    for (size_t i = start_idx; i < args.size(); i++) {
+        string text = args[i];
+        
+        // Handle escape sequences if -e is specified
+        if (interpret_escapes) {
+            string result;
+            for (size_t j = 0; j < text.size(); j++) {
+                if (text[j] == '\\' && j + 1 < text.size()) {
+                    char next = text[j + 1];
+                    switch (next) {
+                        case 'n': result += '\n'; break;
+                        case 't': result += '\t'; break;
+                        case 'r': result += '\r'; break;
+                        case 'a': result += '\a'; break;
+                        case 'b': result += '\b'; break;
+                        case 'f': result += '\f'; break;
+                        case 'v': result += '\v'; break;
+                        case '\\': result += '\\'; break;
+                        default: result += '\\'; result += next;
+                    }
+                    j++; // Skip the next character
+                } else {
+                    result += text[j];
+                }
+            }
+            cout << result;
+        } else {
+            cout << text;
+        }
+
+        // Add a space between arguments (but not after the last one)
+        if (i < args.size() - 1) {
+            cout << " ";
+        }
+    }
+      // Always add a newline in ThaiShell (ignoring the add_newline flag)
+    cout << endl;
+}
+
 bool handle_builtin(vector<string>& args) {
     if (args.empty()) return false;
 
@@ -129,6 +198,9 @@ bool handle_builtin(vector<string>& args) {
         if (builtin_exit()) {
             exit(0);
         }
+        return true;
+    } else if (cmd == "echo") {
+        builtin_echo(args);
         return true;
     }
 

@@ -5,6 +5,7 @@
 #include <vector>
 #include<iostream>
 #include <iomanip>
+#include <algorithm>
 
 using namespace std;
 
@@ -72,19 +73,38 @@ void startProcess(const string& cmd, bool isBackground) {
         &pi
     );    
     
-    if (success) {
-        if (isBackground) {
-            // First, add the initial process
-            ProcessManager::addProcess(pi.dwProcessId, cmd, pi.hProcess);
+    if (success) {        if (isBackground) {
+            // Store the original PID first
+            DWORD originalPid = pi.dwProcessId;
             
-            // Add the process to history
-            ProcessHistory::addProcess(pi.dwProcessId, cmd);
+            // Check if this is likely to be a GUI application
+            bool isGuiApp = false;
+            string lowerCmd = cmd;
+            transform(lowerCmd.begin(), lowerCmd.end(), lowerCmd.begin(), ::tolower);
+            
+            // Enhanced heuristic: check if the command contains typical GUI apps
+            if (lowerCmd.find("notepad") != string::npos || 
+                lowerCmd.find("explorer") != string::npos || 
+                lowerCmd.find("mspaint") != string::npos ||
+                lowerCmd.find("calc") != string::npos ||
+                lowerCmd.find("winword") != string::npos ||
+                lowerCmd.find("excel") != string::npos ||
+                lowerCmd.find("chrome") != string::npos ||
+                lowerCmd.find("firefox") != string::npos ||
+                lowerCmd.find("msedge") != string::npos) {
+                isGuiApp = true;
+            }
+            
+            // Add the original process to our tracking list, but not to history yet
+            ProcessManager::addProcess(pi.dwProcessId, cmd, pi.hProcess);
             
             log(INFO, "Started background process with PID: " + to_string(pi.dwProcessId) +
                       ", Command: " + cmd);
             
             // Give the process a moment to create child processes 
             Sleep(500);
+            
+            bool childProcessFound = false;
             
             // Now check if this process spawned any children
             HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
@@ -110,8 +130,19 @@ void startProcess(const string& cmd, bool isBackground) {
                                     // Add the child to our process list
                                     ProcessManager::addProcess(pe32.th32ProcessID, childName, childHandle);
                                     
-                                    // Add the child process to history
-                                    ProcessHistory::addProcess(pe32.th32ProcessID, childName);
+                                    // For GUI apps, only add the child process to history
+                                    // For non-GUI apps, add both parent and child
+                                    if (isGuiApp) {
+                                        // Only add the child to history (not the parent)
+                                        ProcessHistory::addProcess(pe32.th32ProcessID, childName);
+                                        childProcessFound = true;
+                                    } else {
+                                        // Add both parent and child to history
+                                        if (!childProcessFound) {
+                                            ProcessHistory::addProcess(originalPid, cmd);
+                                        }
+                                        ProcessHistory::addProcess(pe32.th32ProcessID, childName);
+                                    }
                                     
                                     log(INFO, "Tracked child process with PID: " + to_string(pe32.th32ProcessID) +
                                         ", Command: " + childName + " (child of PID: " + to_string(pi.dwProcessId) + ")");
@@ -123,18 +154,186 @@ void startProcess(const string& cmd, bool isBackground) {
                     } while (Process32Next(hSnapshot, &pe32));
                 }
                 CloseHandle(hSnapshot);
-            }   
-        } else {
-            // For foreground processes, add to history before waiting
-            ProcessHistory::addProcess(pi.dwProcessId, cmd);
+            }
             
-            WaitForSingleObject(pi.hProcess, INFINITE);
+            // If we didn't find any child processes, add the parent to history
+            if (!childProcessFound) {
+                ProcessHistory::addProcess(originalPid, cmd);
+            }        } else {
+            // Check if this is likely to be a GUI application
+            bool isGuiApp = false;
+            string lowerCmd = cmd;
+            transform(lowerCmd.begin(), lowerCmd.end(), lowerCmd.begin(), ::tolower);
             
-            // Update end time since the process has finished
-            ProcessHistory::updateEndTime(pi.dwProcessId);
+            // Enhanced heuristic: check if the command contains typical GUI apps
+            if (lowerCmd.find("notepad") != string::npos || 
+                lowerCmd.find("explorer") != string::npos || 
+                lowerCmd.find("mspaint") != string::npos ||
+                lowerCmd.find("calc") != string::npos ||
+                lowerCmd.find("winword") != string::npos ||
+                lowerCmd.find("excel") != string::npos ||
+                lowerCmd.find("chrome") != string::npos ||
+                lowerCmd.find("firefox") != string::npos ||
+                lowerCmd.find("msedge") != string::npos ||
+                lowerCmd.find(".exe") != string::npos) {
+                isGuiApp = true;
+            }
             
-            CloseHandle(pi.hProcess);
-            CloseHandle(pi.hThread);
+            log(INFO, "Running " + cmd + " in foreground mode");
+              if (isGuiApp) {
+                log(INFO, "GUI application detected. Will track child processes...");
+                // Wait a little for child processes to spawn
+                Sleep(500);
+                
+                // Store the original PID first
+                DWORD originalPid = pi.dwProcessId;
+                
+                // Keep track of all child PIDs
+                vector<DWORD> childPids;
+                
+                // Now check if this process spawned any children
+                HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+                if (hSnapshot != INVALID_HANDLE_VALUE) {
+                    PROCESSENTRY32 pe32;
+                    pe32.dwSize = sizeof(PROCESSENTRY32);
+                    if (Process32First(hSnapshot, &pe32)) {
+                        do {
+                            // If we find a process whose parent is our launched process
+                            if (pe32.th32ParentProcessID == originalPid) {
+                                childPids.push_back(pe32.th32ProcessID);
+                                log(INFO, "Found child process PID: " + to_string(pe32.th32ProcessID));
+                            }
+                        } while (Process32Next(hSnapshot, &pe32));
+                    }
+                    CloseHandle(hSnapshot);
+                }
+                
+                // For foreground applications, we need to wait for either:
+                // 1. The parent process to finish if it's the main app
+                // 2. OR wait for all child processes if the parent is just a launcher
+                
+                log(INFO, "Waiting for the application to complete...");
+                bool waitForChildren = false;
+                
+                // First check if parent process is just a quick launcher
+                DWORD waitResult = WaitForSingleObject(pi.hProcess, 2000); // Wait up to 2 seconds for parent
+                
+                if (waitResult == WAIT_OBJECT_0 && !childPids.empty()) {
+                    // Parent exited quickly and we found child processes - this means the parent was just a launcher
+                    log(INFO, "Parent process exited, waiting for child processes to finish");
+                    waitForChildren = true;                } else if (waitResult == WAIT_TIMEOUT) {                    // Parent is still running after timeout - this means the parent is the main application
+                    log(INFO, "Parent process is the main application, waiting for it to finish");
+                    
+                    // Add the parent process to history since it's the main application
+                    ProcessHistory::addProcess(pi.dwProcessId, cmd);
+                    
+                    // Register the parent process with the Ctrl+C handler
+                    CtrlCHandler::setForegroundProcess(pi.hProcess, pi.dwProcessId);
+                    log(INFO, "Registered parent process PID " + to_string(pi.dwProcessId) + " with Ctrl+C handler");
+                    
+                    // Wait for it to finish
+                    WaitForSingleObject(pi.hProcess, INFINITE);
+                    
+                    // Reset the Ctrl+C handler once finished
+                    CtrlCHandler::resetForegroundProcess();
+                    
+                    // Update the end time since it has finished
+                    ProcessHistory::updateEndTime(pi.dwProcessId);
+                }
+                
+                // If the parent was just a launcher, wait for the child processes
+                if (waitForChildren) {
+                    vector<HANDLE> childHandles;
+                    
+                    // Open handles to all child processes
+                    for (const DWORD& childPid : childPids) {
+                        HANDLE childHandle = OpenProcess(SYNCHRONIZE, FALSE, childPid);
+                        if (childHandle) {
+                            childHandles.push_back(childHandle);
+                            
+                            // Get the name of the process for history
+                            HANDLE processHandle = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, childPid);
+                            if (processHandle) {
+                                char exeName[MAX_PATH];
+                                DWORD size = MAX_PATH;
+                                string childName = "Unknown";
+                                
+                                if (QueryFullProcessImageNameA(processHandle, 0, exeName, &size)) {
+                                    string fullPath = exeName;
+                                    size_t lastSlash = fullPath.find_last_of("\\");
+                                    childName = fullPath.substr(lastSlash + 1);
+                                }
+                                
+                                // Add only the child process to history
+                                ProcessHistory::addProcess(childPid, childName);
+                                
+                                CloseHandle(processHandle);
+                            }
+                        }
+                    }
+                      if (!childHandles.empty()) {
+                        log(INFO, "Waiting for all " + to_string(childHandles.size()) + " child processes to finish...");
+                        
+                        // Register the first child process with the Ctrl+C handler
+                        if (childHandles.size() > 0) {
+                            HANDLE primaryChild = childHandles[0];
+                            DWORD primaryChildPid = childPids[0];
+                            
+                            // Register this child process with the Ctrl+C handler
+                            CtrlCHandler::setForegroundProcess(primaryChild, primaryChildPid);
+                        }
+                        
+                        // Wait for all child processes to finish (foreground mode)
+                        WaitForMultipleObjects(childHandles.size(), childHandles.data(), TRUE, INFINITE);
+                        
+                        // Reset the Ctrl+C handler once finished
+                        CtrlCHandler::resetForegroundProcess();
+                        
+                        // Close all the child handles
+                        for (HANDLE h : childHandles) {
+                            CloseHandle(h);
+                        }
+                        
+                        log(INFO, "All child processes have exited");
+                        
+                        // Update end time for all child processes in history
+                        for (const DWORD& childPid : childPids) {
+                            ProcessHistory::updateEndTime(childPid);
+                        }
+                    }
+                }
+                
+                // Close original process handles
+                CloseHandle(pi.hProcess);
+                CloseHandle(pi.hThread);
+                
+                // Update end time for the original process
+                ProcessHistory::updateEndTime(originalPid);
+                
+                log(INFO, "Process completed");
+            } else {                // For standard console applications, add to history and wait for them to finish
+                log(INFO, "Waiting for process to complete...");
+                
+                // For console apps, add to history here
+                ProcessHistory::addProcess(pi.dwProcessId, cmd);
+                
+                // Register the console process with the Ctrl+C handler
+                CtrlCHandler::setForegroundProcess(pi.hProcess, pi.dwProcessId);
+                log(INFO, "Registered console process PID " + to_string(pi.dwProcessId) + " with Ctrl+C handler");
+                
+                WaitForSingleObject(pi.hProcess, INFINITE);
+                
+                // Reset the Ctrl+C handler once finished
+                CtrlCHandler::resetForegroundProcess();
+                
+                // Update end time since the process has finished
+                ProcessHistory::updateEndTime(pi.dwProcessId);
+                
+                CloseHandle(pi.hProcess);
+                CloseHandle(pi.hThread);
+                
+                log(INFO, "Process completed");
+            }
         }
     } else {
         log(LOG_ERROR, "Failed to start process: " + cmd);
@@ -155,6 +354,9 @@ void ProcessManager::listProcesses() {
     
     // Get ThaiShell's own PID
     DWORD currentPID = GetCurrentProcessId();
+    
+    // Keep track of PIDs we've already displayed to avoid duplicates
+    vector<DWORD> displayedPids;
       
     for (const auto& proc : bgProcesses) {
         // First check if this process still exists or has been replaced by a child
@@ -171,8 +373,7 @@ void ProcessManager::listProcesses() {
                 do {
                     // Check if this is our process or a child of our process
                     if (pe32.th32ProcessID == proc.pid) {
-                        foundActualProcess = true;                        // For simplicity, just assign the filename directly
-                        // This handles both UNICODE and non-UNICODE builds
+                        foundActualProcess = true;
                         actualCommand = pe32.szExeFile;
                         break;
                     }
@@ -302,16 +503,19 @@ void ProcessManager::listProcesses() {
             }
         } else {
             status = proc.isRunning ? "Running" : "Stopped";
-        }          // Output to console with formatting
+        }            // Check if we've already displayed this PID
+        if (find(displayedPids.begin(), displayedPids.end(), actualPid) != displayedPids.end()) {
+            continue; // Skip displaying this process if PID has already been shown
+        }
+        
+        // Output to console with formatting
         cout << setw(10) << left << actualPid  // Use the actual PID we found
              << setw(40) << left << actualCommand  // Use the actual command/process name
              << setw(20) << left << ppid
              << setw(20) << left << status << endl;
              
-        // If we're showing a different PID than what's in our records, let the user know
-        if (actualPid != proc.pid && foundActualProcess) {
-            cout << "   └─ (Actual process running for " << proc.command << ")" << endl;
-        }
+        // Add this PID to our displayed list to avoid duplicates
+        displayedPids.push_back(actualPid);
     }
 }
 
@@ -588,6 +792,67 @@ void ProcessManager::resumeProcess(DWORD pid) {
     }
 }
 
+void ProcessManager::findChildProcesses(DWORD parentPid) {
+    // First check if the parent process exists
+    HANDLE hParentProcess = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, parentPid);
+    if (!hParentProcess) {
+        log(WARN, "No process found with PID: " + std::to_string(parentPid));
+        return;
+    }
+    CloseHandle(hParentProcess);
+
+    // Take a snapshot of all processes
+    HANDLE hProcessSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    if (hProcessSnap == INVALID_HANDLE_VALUE) {
+        log(LOG_ERROR, "Failed to take process snapshot.");
+        return;
+    }
+
+    // Initialize process entry structure
+    PROCESSENTRY32 pe32;
+    pe32.dwSize = sizeof(PROCESSENTRY32);
+
+    // Try to get the first process
+    if (!Process32First(hProcessSnap, &pe32)) {
+        log(LOG_ERROR, "Failed to retrieve process information.");
+        CloseHandle(hProcessSnap);
+        return;
+    }
+
+    // Prepare for displaying the results
+    std::vector<std::pair<DWORD, std::string>> childProcesses;
+    
+    // Loop through all processes to find children
+    do {
+        // Check if this process's parent ID matches our target
+        if (pe32.th32ParentProcessID == parentPid) {
+            childProcesses.push_back({pe32.th32ProcessID, std::string(pe32.szExeFile)});
+        }
+    } while (Process32Next(hProcessSnap, &pe32));
+    
+    CloseHandle(hProcessSnap);
+
+    // Print the results
+    log(INFO, "Child processes of PID " + std::to_string(parentPid) + ":");
+    
+    if (childProcesses.empty()) {
+        log(INFO, "No child processes found.");
+    } else {
+        // Print a formatted header
+        std::cout << std::setw(10) << std::left << "PID" 
+                 << std::setw(40) << std::left << "Process Name" << std::endl;
+        std::cout << "---------------------------------------------" << std::endl;
+        
+        // Print each child process
+        for (const auto& child : childProcesses) {
+            std::cout << std::setw(10) << std::left << child.first 
+                     << std::setw(40) << std::left << child.second << std::endl;
+        }
+        
+        log(INFO, "Found " + std::to_string(childProcesses.size()) + " child process(es).");
+    }
+}
+
 bool ProcessManager::handleCommand(const Command& cmd) {
     if (cmd.program == "globalList") {
         ListProcesses();
@@ -612,12 +877,17 @@ bool ProcessManager::handleCommand(const Command& cmd) {
     if (cmd.program == "stop" && !cmd.args.empty()) {
         stopProcess(stoi(cmd.args[0]));
         return true;
-    }    if (cmd.program == "resume" && !cmd.args.empty()) {
+    }    
+    if (cmd.program == "resume" && !cmd.args.empty()) {
         resumeProcess(stoi(cmd.args[0]));
         return true;
-    }
+    }    
     if (cmd.program == "history") {
         ProcessHistory::displayHistory();
+        return true;
+    }
+    if (cmd.program == "child" && !cmd.args.empty()) {
+        findChildProcesses(stoi(cmd.args[0]));
         return true;
     }
     return false;

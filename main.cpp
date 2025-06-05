@@ -1,6 +1,4 @@
-#define NOMINMAX
-#define WIN32_LEAN_AND_MEAN
-#define WINDOWS_LEAN_AND_MEAN
+// Windows macros are defined on command line with -D flag
 
 #include <iostream>
 #include <string>
@@ -13,16 +11,19 @@
 #include "file_manager.h"
 #include "path.h"
 #include "color.h"
+#include "ctrl_c_handler.h"
 using namespace std;
 
 int main() {
     enableANSISupport(); // Enable ANSI colors on Windows
+    
+    // Initialize the Ctrl+C handler
+    CtrlCHandler::initialize();
+    
     printInitialBanner();
     ProcessManager procManager;
-    string input;
-
-    while (true) {
-        cout << COLOR_GREEN "[ThaiShell]" COLOR_RESET " " << fs::current_path().string() << "> ";
+    string input;while (true) {
+        cout << COLOR_GREEN "[ThaiShell]" COLOR_RESET " > ";
         getline(cin, input);
         if (input.empty()) continue;
 

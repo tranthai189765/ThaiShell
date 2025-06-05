@@ -1,0 +1,2 @@
+@echo off 
+ThaiShell.exe 
