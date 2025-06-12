@@ -45,6 +45,7 @@ void builtin_help() {
     std::cout << std::setw(x) << "start <processName> &" << ": Start background process" << std::endl;
     std::cout << std::setw(x) << "myList" << ": List background processes created by ThaiShell" << std::endl;
     std::cout << std::setw(x) << "globalList" << ": List all background processes" << std::endl;
+    std::cout << std::setw(x) << "child <pid>" << ": List all child processes" << std::endl;
     std::cout << std::setw(x) << "kill <pid>" << ": Kill a process by PID" << std::endl;
     std::cout << std::setw(x) << "stop <pid>" << ": Stop a process by PID" << std::endl;
     std::cout << std::setw(x) << "resume <pid>" << ": Resume a stopped process by PID" << std::endl;

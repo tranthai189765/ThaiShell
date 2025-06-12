@@ -8,6 +8,13 @@ void SetColor(WORD color) {
 }
 
 void log(LogLevel level, const std::string& message) {
+    // Make sure we start on a fresh line
+    static bool needNewline = false;
+    if (needNewline) {
+        std::cout << std::endl;
+        needNewline = false;
+    }
+    
     switch(level) {
         case 0:
             SetColor(FOREGROUND_BLUE | FOREGROUND_INTENSITY);
@@ -18,7 +25,7 @@ void log(LogLevel level, const std::string& message) {
             std::cout << "[ERROR] ";
             break;
         case 2:
-            SetColor(FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_INTENSITY); // Vàng
+            SetColor(FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_INTENSITY); // Yellow
             std::cout << "[WARN] ";
             break;
         case 3:
@@ -31,7 +38,7 @@ void log(LogLevel level, const std::string& message) {
             break;
     }
 
-    SetColor(FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE); // Reset màu
+    SetColor(FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE); // Reset color
     std::cout << message << std::endl;
 }
 

@@ -16,7 +16,7 @@ void CtrlCHandler::initialize() {
         // Failed to set the handler
         log(LOG_ERROR, "Failed to set Ctrl+C handler: " + std::to_string(GetLastError()));
     } else {
-        log(INFO, "Ctrl+C handler installed successfully");
+        return;
     }
 }
 
@@ -42,7 +42,7 @@ DWORD CtrlCHandler::getForegroundProcessPid() {
 BOOL WINAPI CtrlCHandler::consoleCtrlHandler(DWORD ctrlType) {
     // Only handle Ctrl+C and Ctrl+Break events
     if (ctrlType == CTRL_C_EVENT || ctrlType == CTRL_BREAK_EVENT) {
-        log(INFO, "Ctrl+C received");
+        // log(INFO, "Ctrl+C received");
         // If there's a foreground process running, terminate it
         if (currentForegroundProcess != NULL) {
             DWORD pid = currentForegroundProcessPid;
@@ -78,7 +78,7 @@ BOOL WINAPI CtrlCHandler::consoleCtrlHandler(DWORD ctrlType) {
             }
             
             // Then terminate the parent process
-            log(INFO, "Terminating parent process with PID: " + std::to_string(pid));
+            // log(INFO, "Terminating child process with PID: " + std::to_string(pid));
             ProcessManager::killProcess(pid);
             
             // In any case, we should reset our handle

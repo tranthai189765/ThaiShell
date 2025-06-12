@@ -627,12 +627,11 @@ void ProcessManager::killProcess(DWORD pid) {
         if (it->pid == pid) {
             if (TerminateProcess(it->handle, 0)) {
                 WaitForSingleObject(it->handle, INFINITE);
-                CloseHandle(it->handle);
-                
-                // Update the end time in process history
+                CloseHandle(it->handle);                // Update the end time in process history
                 ProcessHistory::updateEndTime(pid);
                 
-                log(SUCCESS, "Killed process with PID: " + to_string(pid));
+                log(INFO, "Process with PID: " + to_string(pid) + " terminated successfully");
+                // cout << "Process with PID: " << pid << " terminated successfully" << endl;
                 bgProcesses.erase(it);
             } else {
                 DWORD error = GetLastError();
@@ -640,10 +639,10 @@ void ProcessManager::killProcess(DWORD pid) {
                 if (error == 5) { // ERROR_ACCESS_DENIED
                     HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
                     if (hProcess != NULL) {
-                        if (TerminateProcess(hProcess, 0)) {
-                            WaitForSingleObject(hProcess, INFINITE);
+                        if (TerminateProcess(hProcess, 0)) {                            WaitForSingleObject(hProcess, INFINITE);
                             CloseHandle(hProcess);
-                            log(SUCCESS, "Killed process with PID: " + to_string(pid));
+                            log(INFO, "Process with PID: " + to_string(pid) + " terminated successfully");
+                            // cout << "Process with PID: " << pid << " terminated successfully" << endl;
                             bgProcesses.erase(it);
                             return;
                         }
@@ -664,12 +663,11 @@ void ProcessManager::killProcess(DWORD pid) {
     HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
     if (hProcess != NULL) {
         if (TerminateProcess(hProcess, 0)) {            WaitForSingleObject(hProcess, INFINITE);
-            CloseHandle(hProcess);
-            
-            // Update the end time in process history for external processes too
+            CloseHandle(hProcess);              // Update the end time in process history for external processes too
             ProcessHistory::updateEndTime(pid);
             
-            log(SUCCESS, "Killed external process with PID: " + to_string(pid));
+            // log(INFO, "Process with PID: " + to_string(pid) + " terminated successfully");
+            cout << "Process with PID: " << pid << " terminated successfully" << endl;
         } else {
             // If failed, check if it's a Windows system process
             DWORD error = GetLastError();
