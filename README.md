@@ -1,18 +1,36 @@
-Wellcome to ThaiShell!
-![image](https://github.com/user-attachments/assets/c504a0ac-a584-4f11-9bf2-0a5ebd0dac2b)
-To run Thai shell :
+<h1 align="center">✨ Welcome to ThaiShell ✨</h1>
 
-please built in by : 
-Bước 1: Tạo bản sao của dự án trên máy tính của bạn.
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/c504a0ac-a584-4f11-9bf2-0a5ebd0dac2b" alt="ThaiShell Banner" width="600"/>
+</p>
+
+<p align="center">
+  <b>An educational mini shell for Operating System experiments</b> <br>
+  ⚙️ Built with C++, CMake & love 💻 <br>
+</p>
+
+---
+
+## 🚀 How to Build & Run ThaiShell
+
+Follow these steps to get started with ThaiShell on your machine:
+
+### 🛠️ Build Instructions
+
+```bash
+# Step 1: Clone the repository
 git clone https://github.com/HaiAu2501/Operating-System-Projects.git
-Bước 2: Tạo folder build cho CMake và chuyển đến thư mục này.
+
+# Step 2: Create and move into the build directory
 mkdir build
 cd build
-Bước 3: Sử dụng CMake để tạo file Makefile hoặc Visual Studio project.
+
+# Step 3: Generate Makefiles using CMake
 cmake ..
-Bước 4: Biên dịch mã nguồn bằng trình biên dịch C++ mà bạn đã cài đặt.
+
+# Step 4: Build the project (for Debug mode)
 cmake --build . --target install --config Debug
-Bước 5: Chạy chương trình Operating-System-Project.exe từ thư mục install. Bạn nên nhập lệnh help để xem danh sách các lệnh hỗ trợ.
+
+# Step 5: Run the executable from the install directory
 cd install
-Operating-System-Project.exe
-Nếu không biên dịch thì cũng không sao, bạn có thể tải file thực thi từ đây. Nếu chạy bị lỗi, hãy cài đặt Visual C++ Redistributable.
+abc.exe
