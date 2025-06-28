@@ -19,7 +19,7 @@ Follow these steps to get started with ThaiShell on your machine:
 
 ```bash
 # Step 1: Clone the repository
-git clone https://github.com/HaiAu2501/Operating-System-Projects.git
+git clone https://github.com/tranthai189765/ThaiShell.git
 
 # Step 2: Create and move into the build directory
 mkdir build
